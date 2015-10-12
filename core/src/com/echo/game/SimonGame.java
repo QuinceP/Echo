@@ -353,6 +353,7 @@ public class SimonGame implements Screen {
                 actor.addAction(sequence(alpha(0.7f, 0.7f), alpha(1.0f, 0.7f), run(new Runnable() {
                     @Override
                     public void run() {
+                        
                     }
                 })));
 
