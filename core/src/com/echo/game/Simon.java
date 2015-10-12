@@ -3,43 +3,60 @@ package com.echo.game;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
 public class Simon extends Game {
-
-    //create variables for the font
-    BitmapFont titleFont;
-
     //create a batch to draw images to the screen
     SpriteBatch batch;
 
-    private void createFonts() {
-        //the file of the font used
-        FileHandle fontFile = Gdx.files.internal("BRITANIC.TTF");
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(fontFile);
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 114;
-        titleFont = generator.generateFont(parameter);
-        generator.dispose();
-    }
-    public void create() {
+    private OrthographicCamera camera;
+    private Stage stage;
+    private Skin skin;
 
-        //create the fonts and the main menu
-        createFonts();
+    @Override
+    public void create() {
         batch = new SpriteBatch();
-        this.setScreen(new MainMenuScreen(this));
+        camera = new OrthographicCamera(1440, 2560);
+        camera.setToOrtho(false, 1440, 2560);
+        stage = new Stage(new FitViewport(1440, 2560, camera), batch);
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        skin.getFont("default-font").getData().setScale(4f, 4f);
+        setScreen(new MainMenuScreen(this));
+        Gdx.input.setInputProcessor(stage);
     }
 
     public void render() {
-        //render everything to the screen
+
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
         super.render();
+        batch.end();
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+        stage.draw();
     }
 
     public void dispose() {
         //garbage cleanup
         batch.dispose();
-        titleFont.dispose();
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public Skin getSkin() {
+        return skin;
+
     }
 }

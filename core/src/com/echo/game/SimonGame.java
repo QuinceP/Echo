@@ -10,12 +10,19 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -27,6 +34,9 @@ import java.util.Random;
 
 public class SimonGame implements Screen {
     final Simon game;
+    private Button[] buttons;
+    private Sound[] sounds;
+
 
     //set up the camera and sprite batches for the game
     protected OrthographicCamera camera;
@@ -48,22 +58,6 @@ public class SimonGame implements Screen {
     private int score = 0;
 
     protected boolean playersTurn = false;
-
-    //Button textures, pressed and unpressed
-    protected Texture redButton;
-    protected Texture redButtonPressed;
-    protected Texture orangeButton;
-    protected Texture orangeButtonPressed;
-    protected Texture yellowButton;
-    protected Texture yellowButtonPressed;
-    protected Texture greenButton;
-    protected Texture greenButtonPressed;
-    protected Texture blueButton;
-    protected Texture blueButtonPressed;
-    protected Texture purpleButton;
-    protected Texture purpleButtonPressed;
-    protected Texture blackButton;
-    protected Texture blackButtonPressed;
 
     //sounds for each button
     protected Sound redSound;
@@ -87,30 +81,19 @@ public class SimonGame implements Screen {
     //private Music Music;
 
 
-    public SimonGame(final Simon simon) {
+    public SimonGame(Simon simon) {
         this.game = simon;
-        //camera setup
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1440, 2560);
 
-        //sprite batch
-        batch = new SpriteBatch();
+        buttons = new Button[7];
+        sounds = new Sound[7];
 
-        //load images
-        redButton = new Texture(Gdx.files.internal("red.png"));
-        redButtonPressed = new Texture(Gdx.files.internal("redbright.png"));
-        orangeButton = new Texture(Gdx.files.internal("orange.png"));
-        orangeButtonPressed = new Texture(Gdx.files.internal("orangebright.png"));
-        yellowButton = new Texture(Gdx.files.internal("yellow.png"));
-        yellowButtonPressed = new Texture(Gdx.files.internal("yellowbright.png"));
-        greenButton = new Texture(Gdx.files.internal("green.png"));
-        greenButtonPressed = new Texture(Gdx.files.internal("greenbright.png"));
-        blueButton = new Texture(Gdx.files.internal("blue.png"));
-        blueButtonPressed = new Texture(Gdx.files.internal("bluebright.png"));
-        purpleButton = new Texture(Gdx.files.internal("purple.png"));
-        purpleButtonPressed = new Texture(Gdx.files.internal("purplebright.png"));
-        blackButton = new Texture(Gdx.files.internal("black.png"));
-        blackButtonPressed = new Texture(Gdx.files.internal("blackbright.png"));
+        TextButton redButton = new TextButton("", game.getSkin());
+        TextButton orangeButton = new TextButton("", game.getSkin());
+        TextButton yellowButton = new TextButton("", game.getSkin());
+        TextButton greenButton = new TextButton("", game.getSkin());
+        TextButton blueButton = new TextButton("", game.getSkin());
+        TextButton purpleButton = new TextButton("", game.getSkin());
+        TextButton blackButton = new TextButton("", game.getSkin());
 
         //load sounds
         redSound = Gdx.audio.newSound(Gdx.files.internal("c.wav"));
@@ -121,48 +104,170 @@ public class SimonGame implements Screen {
         purpleSound = Gdx.audio.newSound(Gdx.files.internal("a.wav"));
         blackSound = Gdx.audio.newSound(Gdx.files.internal("b.wav"));
 
-        //rectangles to contain the buttons
-        red = new Rectangle();
-        red.x = 120;
-        red.y = 1800;
-        red.width = 256;
-        red.height = 256;
+        buttons[0] = redButton;
+        buttons[1] = orangeButton;
+        buttons[2] = yellowButton;
+        buttons[3] = greenButton;
+        buttons[4] = blueButton;
+        buttons[5] = purpleButton;
+        buttons[6] = blackButton;
 
-        orange = new Rectangle();
-        orange.x = 570;
-        orange.y = 1800;
-        orange.width = 256;
-        orange.height = 256;
+        sounds[0] = redSound;
+        sounds[1] = orangeSound;
+        sounds[2] = yellowSound;
+        sounds[3] = greenSound;
+        sounds[4] = blueSound;
+        sounds[5] = purpleSound;
+        sounds[6] = blackSound;
 
-        yellow = new Rectangle();
-        yellow.x = 1020;
-        yellow.y = 1800;
-        yellow.width = 256;
-        yellow.height = 256;
+        TextButton.TextButtonStyle redButtonStyle = new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle orangeButtonStyle= new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle yellowButtonStyle= new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle greenButtonStyle= new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle blueButtonStyle= new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle purpleButtonStyle= new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle blackButtonStyle= new TextButton.TextButtonStyle();
 
-        green = new Rectangle();
-        green.x = 120;
-        green.y = 1500;
-        green.width = 256;
-        green.height = 256;
+        redButton.setPosition(272, 1680);
+        redButton.setWidth(384);
+        redButton.setHeight(384);
+        orangeButton.setPosition(784, 1680);
+        orangeButton.setWidth(384);
+        orangeButton.setHeight(384);
+        yellowButton.setPosition(80, 1040);
+        yellowButton.setWidth(384);
+        yellowButton.setHeight(384);
+        greenButton.setPosition(528, 1040);
+        greenButton.setWidth(384);
+        greenButton.setHeight(384);
+        blueButton.setPosition(976, 1040);
+        blueButton.setWidth(384);
+        blueButton.setHeight(384);
+        purpleButton.setPosition(272, 400);
+        purpleButton.setWidth(384);
+        purpleButton.setHeight(384);
+        blackButton.setPosition(784, 400);
+        blackButton.setWidth(384);
+        blackButton.setHeight(384);
 
-        blue = new Rectangle();
-        blue.x = 570;
-        blue.y = 1500;
-        blue.width = 256;
-        blue.height = 256;
+        Color BURNTORANGE = new Color(152/255f, 82/255f, 18/255f, 1);
 
-        purple = new Rectangle();
-        purple.x = 1020;
-        purple.y = 1500;
-        purple.width = 256;
-        purple.height = 256;
+        // Generate a 1x1 white texture and store it in the skin named "white".
+        Pixmap pixmap = new Pixmap(384, 384, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        game.getSkin().add("red", new Texture(pixmap));
+        game.getSkin().add("orange", new Texture(pixmap));
+        game.getSkin().add("yellow", new Texture(pixmap));
+        game.getSkin().add("green", new Texture(pixmap));
+        game.getSkin().add("blue", new Texture(pixmap));
+        game.getSkin().add("purple", new Texture(pixmap));
+        game.getSkin().add("black", new Texture(pixmap));
 
-        black = new Rectangle();
-        black.x = 570;
-        black.y = 1200;
-        black.width = 256;
-        black.height = 256;
+        redButtonStyle.down = game.getSkin().newDrawable("red", Color.RED);
+        redButtonStyle.up = game.getSkin().newDrawable("red", Color.FIREBRICK);
+        redButtonStyle.font = game.getSkin().getFont("default-font");
+        redButton.setStyle(redButtonStyle);
+
+        orangeButtonStyle.down = game.getSkin().newDrawable("orange", Color.ORANGE);
+        orangeButtonStyle.up = game.getSkin().newDrawable("orange", BURNTORANGE);
+        orangeButtonStyle.font = game.getSkin().getFont("default-font");
+        orangeButton.setStyle(orangeButtonStyle);
+
+        yellowButtonStyle.down = game.getSkin().newDrawable("yellow", Color.YELLOW);
+        yellowButtonStyle.up = game.getSkin().newDrawable("yellow", Color.GOLDENROD);
+        yellowButtonStyle.font = game.getSkin().getFont("default-font");
+        yellowButton.setStyle(yellowButtonStyle);
+
+        greenButtonStyle.down = game.getSkin().newDrawable("green", Color.GREEN);
+        greenButtonStyle.up = game.getSkin().newDrawable("green", Color.FOREST);
+        greenButtonStyle.font = game.getSkin().getFont("default-font");
+        greenButton.setStyle(greenButtonStyle);
+
+        blueButtonStyle.down = game.getSkin().newDrawable("blue", Color.BLUE);
+        blueButtonStyle.up = game.getSkin().newDrawable("blue", Color.NAVY);
+        blueButtonStyle.font = game.getSkin().getFont("default-font");
+        blueButton.setStyle(blueButtonStyle);
+
+        purpleButtonStyle.down = game.getSkin().newDrawable("purple", Color.PURPLE);
+        purpleButtonStyle.up = game.getSkin().newDrawable("purple", Color.VIOLET);
+        purpleButtonStyle.font = game.getSkin().getFont("default-font");
+        purpleButton.setStyle(purpleButtonStyle);
+
+        blackButtonStyle.down = game.getSkin().newDrawable("black", Color.LIGHT_GRAY);
+        blackButtonStyle.up = game.getSkin().newDrawable("black", Color.DARK_GRAY);
+        blackButtonStyle.font = game.getSkin().getFont("default-font");
+        blackButton.setStyle(blackButtonStyle);
+
+
+        buttons[0].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[0].play();
+            }
+        });
+        buttons[1].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[1].play();
+            }
+        });
+        buttons[2].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[2].play();
+            }
+        });
+        buttons[3].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[3].play();
+            }
+        });
+        buttons[4].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[4].play();
+            }
+        });
+        buttons[5].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[5].play();
+            }
+        });
+        buttons[6].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for (Sound sound : sounds){
+                    sound.stop();
+                }
+                sounds[6].play();
+            }
+        });
+
+
+
+
+
 
 
     }
@@ -176,145 +281,8 @@ public class SimonGame implements Screen {
     @Override
     //draw images to screen
     public void render(float delta) {
-        //last time a sound was played (might remove this and just put a shorter sound in so i dont have to clip it.)
-        lastSoundTime = TimeUtils.nanoTime();
-
-        //color of the screen
-        Gdx.gl.glClearColor(0, 0, 0.3f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        //update the camera
-        camera.update();
-
-        //draw all the buttons
-        game.batch.setProjectionMatrix(camera.combined);
-        game.batch.begin();
-        game.batch.draw(redButton, red.x, red.y);
-        game.batch.draw(orangeButton, orange.x, orange.y);
-        game.batch.draw(yellowButton, yellow.x, yellow.y);
-        game.batch.draw(greenButton, green.x, green.y);
-        game.batch.draw(blueButton, blue.x, blue.y);
-        game.batch.draw(purpleButton, purple.x, purple.y);
-        game.batch.draw(blackButton, black.x, black.y);
-
-        game.batch.end();
 
 
-        //play sounds if buttons are touched
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (red.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(redButtonPressed, red.x, red.y);
-                game.batch.end();
-                redSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    //stop the sound after a certain time (half second)
-                    redSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (orange.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(orangeButtonPressed, orange.x, orange.y);
-                game.batch.end();
-                orangeSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    orangeSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (yellow.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(yellowButtonPressed, yellow.x, yellow.y);
-                game.batch.end();
-                yellowSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    yellowSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (green.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(greenButtonPressed, green.x, green.y);
-                game.batch.end();
-                greenSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    greenSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (blue.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(blueButtonPressed, blue.x, blue.y);
-                game.batch.end();
-                blueSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    blueSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (purple.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(purpleButtonPressed, purple.x, purple.y);
-                game.batch.end();
-                purpleSound.play();
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    purpleSound.stop();
-                }
-            }
-        }
-
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            if (black.contains(touchPos.x, touchPos.y)) {
-                game.batch.begin();
-                game.batch.draw(blackButtonPressed, black.x, black.y);
-                game.batch.end();
-
-                blackSound.play();
-
-                if (TimeUtils.nanoTime() - lastSoundTime > 500000000) {
-                    blackSound.stop();
-                }
-            }
-        }
-
-        //unused, game logic will go here in the render method
-/*		if (playersTurn == false){
-            addSequence();
-			playSequence();
-			playersTurn = true;
-		}*/
 
     }
 
@@ -330,6 +298,7 @@ public class SimonGame implements Screen {
         colors[5] = "purple";
         colors[6] = "black";
 
+
         Random random = new Random();
         int num = random.nextInt(7);
 
@@ -342,10 +311,16 @@ public class SimonGame implements Screen {
     public void show() {
         // music
 
+        for (int i = 0; i < 7; i++) {
+            game.getStage().addActor(buttons[i]);
+        }
     }
 
     @Override
     public void hide() {
+        for (int i = 0; i < 7; i++) {
+            buttons[i].remove();
+        }
     }
 
 
@@ -371,94 +346,10 @@ public class SimonGame implements Screen {
 
     //play all notes in the sequence. unused right now.
     public void playSequence() {
-        float delay = 1 / 2; // seconds
+        long delay = 3000; // milliseconds
 
 
         for (String color : sequence) {
-            if (color.equals("red")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(redButtonPressed, red.x, red.y);
-                    }
-                }, delay);
-
-                game.batch.end();
-                redSound.play();
-            }
-
-            if (color.equals("orange")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(orangeButtonPressed, orange.x, orange.y);
-                    }
-                }, delay);
-                game.batch.end();
-                redSound.play();
-            }
-
-            if (color.equals("yellow")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(yellowButtonPressed, yellow.x, yellow.y);
-                    }
-                }, delay);
-                game.batch.end();
-                yellowSound.play();
-            }
-
-            if (color.equals("green")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(greenButtonPressed, green.x, green.y);
-                    }
-                }, delay);
-                game.batch.end();
-                greenSound.play();
-            }
-
-            if (color.equals("blue")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(blueButtonPressed, blue.x, blue.y);
-                    }
-                }, delay);
-                game.batch.end();
-                blueSound.play();
-            }
-
-            if (color.equals("purple")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(purpleButtonPressed, purple.x, purple.y);
-                    }
-                }, delay);
-                game.batch.end();
-                purpleSound.play();
-            }
-
-            if (color.equals("black")) {
-                game.batch.begin();
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        game.batch.draw(blackButtonPressed, black.x, black.y);
-                    }
-                }, delay);
-                game.batch.end();
-                blackSound.play();
-            }
 
         }
 
