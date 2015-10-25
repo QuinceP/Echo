@@ -24,7 +24,7 @@ public class MainMenuScreen implements Screen {
         start.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.log("button", "clickedHO");
+                Gdx.app.log("button", "clicked");
                 game.setScreen(new SimonGame(game));
             }
         });

@@ -35,7 +35,7 @@ public class Simon extends Game {
 
     public void render() {
 
-        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClearColor(20/255f, 20/255f,20/255f, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         batch.setProjectionMatrix(camera.combined);

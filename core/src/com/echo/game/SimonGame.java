@@ -1,44 +1,35 @@
 package com.echo.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.ApplicationListener;
+import java.util.logging.Logger;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
-import static com.badlogic.gdx.math.Interpolation.*;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
-import java.util.ArrayList;
 import java.util.Random;
+
+import sun.rmi.runtime.Log;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
 
 public class SimonGame implements Screen {
     final Simon game;
     private Button[] buttons;
     private Sound[] sounds;
+    final Color BURNTORANGE = new Color(152 / 255f, 82 / 255f, 18 / 255f, 1);
 
 
     //set up the camera and sprite batches for the game
@@ -51,6 +42,7 @@ public class SimonGame implements Screen {
 
     //an array list to store the pattern sequence that needs to be repeated
     protected int[] seq = new int[100];
+    protected int length = 0;
 
     //the current note that needs to be pressed
     private String currentNote;
@@ -115,6 +107,7 @@ public class SimonGame implements Screen {
         buttons[5] = purpleButton;
         buttons[6] = blackButton;
 
+
         sounds[0] = redSound;
         sounds[1] = orangeSound;
         sounds[2] = yellowSound;
@@ -153,7 +146,7 @@ public class SimonGame implements Screen {
         blackButton.setWidth(384);
         blackButton.setHeight(384);
 
-        Color BURNTORANGE = new Color(152 / 255f, 82 / 255f, 18 / 255f, 1);
+
 
         // Generate a 1x1 white texture and store it in the skin named "white".
         Pixmap pixmap = new Pixmap(384, 384, Pixmap.Format.RGBA8888);
@@ -187,13 +180,13 @@ public class SimonGame implements Screen {
         greenButtonStyle.font = game.getSkin().getFont("default-font");
         greenButton.setStyle(greenButtonStyle);
 
-        blueButtonStyle.down = game.getSkin().newDrawable("blue", Color.BLUE);
-        blueButtonStyle.up = game.getSkin().newDrawable("blue", Color.NAVY);
+        blueButtonStyle.down = game.getSkin().newDrawable("blue", Color.CYAN);
+        blueButtonStyle.up = game.getSkin().newDrawable("blue", Color.SKY);
         blueButtonStyle.font = game.getSkin().getFont("default-font");
         blueButton.setStyle(blueButtonStyle);
 
-        purpleButtonStyle.down = game.getSkin().newDrawable("purple", Color.PURPLE);
-        purpleButtonStyle.up = game.getSkin().newDrawable("purple", Color.VIOLET);
+        purpleButtonStyle.down = game.getSkin().newDrawable("purple", Color.VIOLET);
+        purpleButtonStyle.up = game.getSkin().newDrawable("purple", Color.PURPLE);
         purpleButtonStyle.font = game.getSkin().getFont("default-font");
         purpleButton.setStyle(purpleButtonStyle);
 
@@ -267,7 +260,8 @@ public class SimonGame implements Screen {
             }
         });
 
-
+        addSequence();
+        playSequence();
     }
 
     @Override
@@ -279,10 +273,6 @@ public class SimonGame implements Screen {
     @Override
     //draw images to screen
     public void render(float delta) {
-        addSequence();
-        playSequence();
-
-
     }
 
     //generate a random color to add to the sequence
@@ -338,24 +328,35 @@ public class SimonGame implements Screen {
     }
 
     //add a color to the sequence. unused right now
-    public void addSequence() {
-        seq[seq.length + 1] = RandomColor();
+    public void addSequence()
+    {
+        seq[length] = RandomColor();
+        length++;
     }
+
 
     //play all notes in the sequence. unused right now.
     public void playSequence() {
         long delay = 3000; // milliseconds
 
-        Actor actor;
-        for (int i = 0; i < seq.length; i++)
+        Button actor;
+
+
+        for (int i = 0; i < length; i++)
             for (int j = 0; j < 7; j++) {
-                actor = buttons[seq[i]];
-                actor.addAction(sequence(alpha(0.7f, 0.7f), alpha(1.0f, 0.7f), run(new Runnable() {
+                int pos = seq[i];
+                actor = buttons[pos];
+                actor.addAction(sequence(alpha(0.5f, 0.65f), (alpha(1, 0.9f)), run(new Runnable() {
                     @Override
                     public void run() {
-                        
+
                     }
+
                 })));
+                for (Sound sound : sounds) {
+                    sound.stop();
+                }
+                sounds[pos].play();
 
 
             }
