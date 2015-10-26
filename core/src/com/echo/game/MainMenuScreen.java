@@ -2,6 +2,9 @@ package com.echo.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -13,10 +16,14 @@ import sun.rmi.runtime.Log;
 public class MainMenuScreen implements Screen {
     final Simon game;
     final TextButton start;
+    private Texture logo;
+    private SpriteBatch batch;
 
 
     public MainMenuScreen(final Simon simon) {
         this.game = simon;
+        batch = new SpriteBatch();
+        logo = new Texture("Echo.png");
         start = new TextButton("Press to start!", game.getSkin());
         start.setWidth(1000);
         start.setHeight(300);
@@ -33,6 +40,9 @@ public class MainMenuScreen implements Screen {
     }
     @Override
     public void render(float delta) {
+        batch.begin();
+        batch.draw(logo, 230, 1800);
+        batch.end();
 
     }
 
@@ -43,11 +53,13 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void show() {
+
         game.getStage().addActor(start);
     }
 
     @Override
     public void hide() {
+
         start.remove();
     }
 
