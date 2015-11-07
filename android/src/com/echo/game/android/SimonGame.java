@@ -1,41 +1,49 @@
-package com.echo.game;
+package com.echo.game.android;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
 
 import java.util.ArrayList;
-import java.util.logging.Logger;
+
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Timer;
+
 
 import java.util.Random;
 
-import sun.rmi.runtime.Log;
+
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.touchable;
 
 
 public class SimonGame implements Screen {
-    final Simon game;
+    final com.echo.game.android.Simon game;
+    public static Preferences prefs;
+
+
+
+
     private Button[] buttons;
     private Sound[] sounds;
     private Label[] labels;
     final Color BURNTORANGE = new Color(152 / 255f, 82 / 255f, 18 / 255f, 1);
     boolean right = true;
+
 
     //an array list to store the pattern sequence that needs to be repeated
     ArrayList<Integer> seq = new ArrayList();
@@ -53,11 +61,18 @@ public class SimonGame implements Screen {
     protected Sound purpleSound;
     protected Sound blackSound;
 
+    protected Sound wrong;
+
     //private Music Music;
 
 
     public SimonGame(Simon simon) {
         this.game = simon;
+        prefs = Gdx.app.getPreferences("Echo");
+        if (!prefs.contains("highscore")) {
+            prefs.putInteger("highscore", 0);
+        }
+
 
         buttons = new Button[7];
         sounds = new Sound[7];
@@ -74,7 +89,7 @@ public class SimonGame implements Screen {
         Label scoreLabel = new Label("Score: ", game.getSkin());
         Label scoreNumber = new Label("0", game.getSkin());
         Label highscoreLabel = new Label("High Score: ", game.getSkin());
-        Label highscoreNumber = new Label("8", game.getSkin());
+        Label highscoreNumber = new Label(Integer.toString(getHighScore()), game.getSkin());
         Label.LabelStyle scoreLabelStyle = new Label.LabelStyle(game.getSkin().getFont("default-font"), Color.SKY);
         scoreLabel.setPosition(272, 2300);
         scoreNumber.setPosition(480, 2300);
@@ -98,6 +113,8 @@ public class SimonGame implements Screen {
         blueSound = Gdx.audio.newSound(Gdx.files.internal("g.wav"));
         purpleSound = Gdx.audio.newSound(Gdx.files.internal("a.wav"));
         blackSound = Gdx.audio.newSound(Gdx.files.internal("b.wav"));
+
+        wrong = Gdx.audio.newSound(Gdx.files.internal("wrong.wav"));
 
         buttons[0] = redButton;
         buttons[1] = orangeButton;
@@ -335,6 +352,7 @@ public class SimonGame implements Screen {
     @Override
     public void pause() {
 
+
     }
 
     @Override
@@ -344,6 +362,7 @@ public class SimonGame implements Screen {
 
     @Override
     public void dispose() {
+
 
     }
 
@@ -356,32 +375,34 @@ public class SimonGame implements Screen {
 
     public void playSequence() {
 
-        for (Button button: buttons){
+        for (Button button : buttons) {
             button.setTouchable(Touchable.disabled);
         }
 
-        long delay = 3000; // milliseconds
 
-        Button actor;
-
-
-        for (int i = 0; i < length; i++)
-            for (int j = 0; j < 7; j++) {
-                int pos = seq.get(i);
-                actor = buttons[pos];
-                actor.addAction(sequence(alpha(0.5f, 0.65f), (alpha(1, 0.9f)), run(new Runnable() {
-                    @Override
-                    public void run() {
-
-                    }
-
-                })));
+        Timer.schedule(new Timer.Task(){
+            int i = 0;
+            @Override
+            public void run() {
                 for (Sound sound : sounds) {
                     sound.stop();
                 }
-                sounds[pos].play();
+               Button button = buttons[seq.get(i)];
+                flashButton(button);
+                sounds[seq.get(i)].play();
+                i++;
+
+
             }
-        listenSequence();
+        }
+                , 1        //    (delay)
+                , 1     //    (seconds)
+                , length
+        );
+
+        for (Button button : buttons) {
+            button.setTouchable(Touchable.enabled);
+        }
     }
 
     public void tap(int color){
@@ -391,6 +412,12 @@ public class SimonGame implements Screen {
 
             if (currentStep== length){
                 labels[1].setText(Integer.toString(currentStep));
+                int highest = getHighScore();
+                if (highest <= currentStep) {
+                    setHighScore(currentStep);
+                    labels[3].setText(Integer.toString((getHighScore())));
+                }
+
                 currentStep = 0;
                 addSequence();
                 playSequence();
@@ -398,21 +425,40 @@ public class SimonGame implements Screen {
         }
         else{
             right = false;
+            for (Sound sound : sounds) {
+                sound.stop();
+            }
+            wrong.play();
+            int highest = getHighScore();
+            if (highest <= currentStep) {
+                setHighScore(currentStep);
+            }
+
+
+
+            game.setScreen(new com.echo.game.android.GameOverScreen(game));
+
         }
 
 
     }
 
-    public void listenSequence(){
-        for (Button button: buttons){
-            button.setTouchable(Touchable.enabled);
-        }
+    public void flashButton(Actor actor){
+        actor.addAction(sequence(alpha(0.5f, 0.65f), (alpha(1, 0.9f)), run(new Runnable() {
+            @Override
+            public void run() {
 
+            }
 
-        if (right == false){
-            //go back to main menu?
-        }
-
-
+        })));
     }
+
+    public static void setHighScore(int score) {
+        prefs.putInteger("highscore", score);
+        prefs.flush();
+    }
+    public static int getHighScore() {
+        return prefs.getInteger("highscore");
+    }
+
 }
