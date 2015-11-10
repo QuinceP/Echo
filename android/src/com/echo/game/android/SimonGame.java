@@ -12,6 +12,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -27,6 +28,9 @@ import java.util.Random;
 
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.color;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.rotateBy;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
@@ -37,7 +41,7 @@ public class SimonGame implements Screen {
 
 
 
-
+    private Color[] shades;
     private Button[] buttons;
     private Sound[] sounds;
     private Label[] labels;
@@ -72,11 +76,15 @@ public class SimonGame implements Screen {
         if (!prefs.contains("highscore")) {
             prefs.putInteger("highscore", 0);
         }
+        if (!prefs.contains("UseAltSound")) {
+            prefs.putBoolean("UseAltSound", false);
+        }
 
 
         buttons = new Button[7];
         sounds = new Sound[7];
         labels = new Label[10];
+        shades = new Color[14];
 
         TextButton redButton = new TextButton("", game.getSkin());
         TextButton orangeButton = new TextButton("", game.getSkin());
@@ -106,13 +114,25 @@ public class SimonGame implements Screen {
         labels[3] = highscoreNumber;
 
         //load sounds
-        redSound = Gdx.audio.newSound(Gdx.files.internal("c.wav"));
-        orangeSound = Gdx.audio.newSound(Gdx.files.internal("d.wav"));
-        yellowSound = Gdx.audio.newSound(Gdx.files.internal("e.wav"));
-        greenSound = Gdx.audio.newSound(Gdx.files.internal("f.wav"));
-        blueSound = Gdx.audio.newSound(Gdx.files.internal("g.wav"));
-        purpleSound = Gdx.audio.newSound(Gdx.files.internal("a.wav"));
-        blackSound = Gdx.audio.newSound(Gdx.files.internal("b.wav"));
+        if (getAltSound()){
+            redSound = Gdx.audio.newSound(Gdx.files.internal("scale 1.wav"));
+            orangeSound = Gdx.audio.newSound(Gdx.files.internal("scale 2.wav"));
+            yellowSound = Gdx.audio.newSound(Gdx.files.internal("scale 3.wav"));
+            greenSound = Gdx.audio.newSound(Gdx.files.internal("scale 4.wav"));
+            blueSound = Gdx.audio.newSound(Gdx.files.internal("scale 5.wav"));
+            purpleSound = Gdx.audio.newSound(Gdx.files.internal("scale 6.wav"));
+            blackSound = Gdx.audio.newSound(Gdx.files.internal("scale 7.wav"));
+
+        }
+        else {
+            redSound = Gdx.audio.newSound(Gdx.files.internal("c.wav"));
+            orangeSound = Gdx.audio.newSound(Gdx.files.internal("d.wav"));
+            yellowSound = Gdx.audio.newSound(Gdx.files.internal("e.wav"));
+            greenSound = Gdx.audio.newSound(Gdx.files.internal("f.wav"));
+            blueSound = Gdx.audio.newSound(Gdx.files.internal("g.wav"));
+            purpleSound = Gdx.audio.newSound(Gdx.files.internal("a.wav"));
+            blackSound = Gdx.audio.newSound(Gdx.files.internal("b.wav"));
+        }
 
         wrong = Gdx.audio.newSound(Gdx.files.internal("wrong.wav"));
 
@@ -177,6 +197,22 @@ public class SimonGame implements Screen {
         game.getSkin().add("purple", new Texture(pixmap));
         game.getSkin().add("black", new Texture(pixmap));
 
+
+        shades[0] = Color.RED;
+        shades[1] = Color.ORANGE;
+        shades[2] = Color.YELLOW;
+        shades[3] = Color.GREEN;
+        shades[4] = Color.CYAN;
+        shades[5] = Color.VIOLET;
+        shades[6] = Color.LIGHT_GRAY;
+        shades[7] = Color.FIREBRICK;
+        shades[8] = BURNTORANGE;
+        shades[9] = Color.GOLDENROD;
+        shades[10] = Color.FOREST;
+        shades[11] = Color.SKY;
+        shades[12] = Color.PURPLE;
+        shades[13] = Color.DARK_GRAY;
+
         redButtonStyle.down = game.getSkin().newDrawable("red", Color.RED);
         redButtonStyle.up = game.getSkin().newDrawable("red", Color.FIREBRICK);
         redButtonStyle.font = game.getSkin().getFont("default-font");
@@ -215,15 +251,15 @@ public class SimonGame implements Screen {
 
 
         buttons[0].addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                for (Sound sound : sounds) {
-                    sound.stop();
-                }
-                sounds[0].play();
-                tap(0);
-            }
-        }
+                                   @Override
+                                   public void clicked(InputEvent event, float x, float y) {
+                                       for (Sound sound : sounds) {
+                                           sound.stop();
+                                       }
+                                       sounds[0].play();
+                                       tap(0);
+                                   }
+                               }
         );
         buttons[1].addListener(new ClickListener() {
             @Override
@@ -388,15 +424,16 @@ public class SimonGame implements Screen {
                     sound.stop();
                 }
                Button button = buttons[seq.get(i)];
-                flashButton(button);
+                flashButton(button, seq.get(i));
                 sounds[seq.get(i)].play();
+
                 i++;
 
 
             }
         }
                 , 1        //    (delay)
-                , 1     //    (seconds)
+                , 0.8f    //    (seconds)
                 , length
         );
 
@@ -443,8 +480,9 @@ public class SimonGame implements Screen {
 
     }
 
-    public void flashButton(Actor actor){
-        actor.addAction(sequence(alpha(0.5f, 0.65f), (alpha(1, 0.9f)), run(new Runnable() {
+    public void flashButton(Actor actor, int i){
+        actor.setOrigin(actor.getWidth() / 2, actor.getHeight() / 2);
+        actor.addAction(sequence(color(shades[i + 7], 0.4f, Interpolation.exp10Out), (color(shades[i], 0.4f, Interpolation.exp10In)), run(new Runnable() {
             @Override
             public void run() {
 
@@ -459,6 +497,13 @@ public class SimonGame implements Screen {
     }
     public static int getHighScore() {
         return prefs.getInteger("highscore");
+    }
+    public static void setAltSound(boolean bool) {
+        prefs.putBoolean("UseAltSound", bool);
+        prefs.flush();
+    }
+    public static boolean getAltSound() {
+        return prefs.getBoolean("UseAltSound");
     }
 
 }
