@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
-//This is the main game engine. Instances of the "Echo" class create a new screen. The screen changes to the specifiec Echo instance.
+//This is the main game engine. Instances of the "Echo" class create a new screen. The screen changes to the specific Echo instance.
 public class Echo extends Game {
     //create a batch to draw images to the screen
     SpriteBatch batch;
@@ -21,7 +21,7 @@ public class Echo extends Game {
     //use the uiskin.json for fonts, etc.
     private Skin skin;
 
-    //creates the screan
+    //creates the screen
     @Override
     public void create() {
         batch = new SpriteBatch();
