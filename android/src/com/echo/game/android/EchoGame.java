@@ -1,10 +1,6 @@
 package com.echo.game.android;
 
-import android.content.SharedPreferences;
-import android.os.Bundle;
-
 import java.util.ArrayList;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
@@ -21,33 +17,29 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Timer;
-
-
-import java.util.Random;
-
-
-
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.color;
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo;
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.rotateBy;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
+import java.util.Random;
 
-public class SimonGame implements Screen {
-    final com.echo.game.android.Simon game;
+//This is the main game screen. This is where the actual game is played, and where the game logic resides.
+public class EchoGame implements Screen {
+    final com.echo.game.android.Echo game;
+    //user preferences
     public static Preferences prefs;
 
-
-
+    //arrays to hold values
     private Color[] shades;
     private Button[] buttons;
     private Sound[] sounds;
     private Label[] labels;
-    final Color BURNTORANGE = new Color(152 / 255f, 82 / 255f, 18 / 255f, 1);
-    boolean right = true;
 
+    //a static color, the only color I used that wasn't a libgdx standard color for the buttons
+    final Color BURNTORANGE = new Color(152 / 255f, 82 / 255f, 18 / 255f, 1);
+
+    //correct input boolean
+    boolean right = true;
 
     //an array list to store the pattern sequence that needs to be repeated
     ArrayList<Integer> seq = new ArrayList();
@@ -65,27 +57,30 @@ public class SimonGame implements Screen {
     protected Sound purpleSound;
     protected Sound blackSound;
 
+    //error sound to play when the user gets a button wrong
     protected Sound wrong;
 
-    //private Music Music;
+    public EchoGame(Echo echo) {
+        this.game = echo;
 
-
-    public SimonGame(Simon simon) {
-        this.game = simon;
+        //get the high score from the preferences, as well as the sound the user chose in the options screen
         prefs = Gdx.app.getPreferences("Echo");
+        //if no high score yet, the default is 0.
         if (!prefs.contains("highscore")) {
             prefs.putInteger("highscore", 0);
         }
+        //if no sound has been chosen, use the default sound and not the alt sound
         if (!prefs.contains("UseAltSound")) {
             prefs.putBoolean("UseAltSound", false);
         }
 
-
+        //initialize the arrays
         buttons = new Button[7];
         sounds = new Sound[7];
         labels = new Label[10];
         shades = new Color[14];
 
+        //initialize the gameplay buttons
         TextButton redButton = new TextButton("", game.getSkin());
         TextButton orangeButton = new TextButton("", game.getSkin());
         TextButton yellowButton = new TextButton("", game.getSkin());
@@ -94,27 +89,33 @@ public class SimonGame implements Screen {
         TextButton purpleButton = new TextButton("", game.getSkin());
         TextButton blackButton = new TextButton("", game.getSkin());
 
+        //create the text labels
         Label scoreLabel = new Label("Score: ", game.getSkin());
         Label scoreNumber = new Label("0", game.getSkin());
         Label highscoreLabel = new Label("High Score: ", game.getSkin());
         Label highscoreNumber = new Label(Integer.toString(getHighScore()), game.getSkin());
-        Label.LabelStyle scoreLabelStyle = new Label.LabelStyle(game.getSkin().getFont("default-font"), Color.SKY);
+
+        //set postitions
         scoreLabel.setPosition(272, 2300);
         scoreNumber.setPosition(480, 2300);
         highscoreLabel.setPosition(700, 2300);
         highscoreNumber.setPosition(1058, 2300);
 
+        //label styles
+        Label.LabelStyle scoreLabelStyle = new Label.LabelStyle(game.getSkin().getFont("default-font"), Color.SKY);
         scoreLabel.setStyle(scoreLabelStyle);
         highscoreLabel.setStyle(scoreLabelStyle);
         scoreNumber.setStyle(scoreLabelStyle);
         highscoreNumber.setStyle(scoreLabelStyle);
+
+        //put the labels in an array (makes it easier to display them all at once)
         labels[0] = scoreLabel;
         labels[1] = scoreNumber;
         labels[2] = highscoreLabel;
         labels[3] = highscoreNumber;
 
         //load sounds
-        if (getAltSound()){
+        if (getAltSound()){ //if alternate sounds are selected
             redSound = Gdx.audio.newSound(Gdx.files.internal("scale 1.wav"));
             orangeSound = Gdx.audio.newSound(Gdx.files.internal("scale 2.wav"));
             yellowSound = Gdx.audio.newSound(Gdx.files.internal("scale 3.wav"));
@@ -124,7 +125,7 @@ public class SimonGame implements Screen {
             blackSound = Gdx.audio.newSound(Gdx.files.internal("scale 7.wav"));
 
         }
-        else {
+        else { //if not, use default sounds
             redSound = Gdx.audio.newSound(Gdx.files.internal("c.wav"));
             orangeSound = Gdx.audio.newSound(Gdx.files.internal("d.wav"));
             yellowSound = Gdx.audio.newSound(Gdx.files.internal("e.wav"));
@@ -134,8 +135,10 @@ public class SimonGame implements Screen {
             blackSound = Gdx.audio.newSound(Gdx.files.internal("b.wav"));
         }
 
+        //error sound
         wrong = Gdx.audio.newSound(Gdx.files.internal("wrong.wav"));
 
+        //add buttons to array
         buttons[0] = redButton;
         buttons[1] = orangeButton;
         buttons[2] = yellowButton;
@@ -144,7 +147,7 @@ public class SimonGame implements Screen {
         buttons[5] = purpleButton;
         buttons[6] = blackButton;
 
-
+        //add sounds to array
         sounds[0] = redSound;
         sounds[1] = orangeSound;
         sounds[2] = yellowSound;
@@ -153,6 +156,7 @@ public class SimonGame implements Screen {
         sounds[5] = purpleSound;
         sounds[6] = blackSound;
 
+        //set the buttons
         TextButton.TextButtonStyle redButtonStyle = new TextButton.TextButtonStyle();
         TextButton.TextButtonStyle orangeButtonStyle = new TextButton.TextButtonStyle();
         TextButton.TextButtonStyle yellowButtonStyle = new TextButton.TextButtonStyle();
@@ -161,24 +165,31 @@ public class SimonGame implements Screen {
         TextButton.TextButtonStyle purpleButtonStyle = new TextButton.TextButtonStyle();
         TextButton.TextButtonStyle blackButtonStyle = new TextButton.TextButtonStyle();
 
+        //position the buttons
         redButton.setPosition(272, 1680);
         redButton.setWidth(384);
         redButton.setHeight(384);
+
         orangeButton.setPosition(784, 1680);
         orangeButton.setWidth(384);
         orangeButton.setHeight(384);
+
         yellowButton.setPosition(80, 1040);
         yellowButton.setWidth(384);
         yellowButton.setHeight(384);
+
         greenButton.setPosition(528, 1040);
         greenButton.setWidth(384);
         greenButton.setHeight(384);
+
         blueButton.setPosition(976, 1040);
         blueButton.setWidth(384);
         blueButton.setHeight(384);
+
         purpleButton.setPosition(272, 400);
         purpleButton.setWidth(384);
         purpleButton.setHeight(384);
+
         blackButton.setPosition(784, 400);
         blackButton.setWidth(384);
         blackButton.setHeight(384);
@@ -188,6 +199,8 @@ public class SimonGame implements Screen {
         // Generate a 1x1 white texture and store it in the skin named "white".
         Pixmap pixmap = new Pixmap(384, 384, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
+
+        //color the buttons
         pixmap.fill();
         game.getSkin().add("red", new Texture(pixmap));
         game.getSkin().add("orange", new Texture(pixmap));
@@ -198,6 +211,7 @@ public class SimonGame implements Screen {
         game.getSkin().add("black", new Texture(pixmap));
 
 
+        //add the shades tot he array
         shades[0] = Color.RED;
         shades[1] = Color.ORANGE;
         shades[2] = Color.YELLOW;
@@ -213,6 +227,7 @@ public class SimonGame implements Screen {
         shades[12] = Color.PURPLE;
         shades[13] = Color.DARK_GRAY;
 
+        //configure the buttons
         redButtonStyle.down = game.getSkin().newDrawable("red", Color.RED);
         redButtonStyle.up = game.getSkin().newDrawable("red", Color.FIREBRICK);
         redButtonStyle.font = game.getSkin().getFont("default-font");
@@ -248,18 +263,18 @@ public class SimonGame implements Screen {
         blackButtonStyle.font = game.getSkin().getFont("default-font");
         blackButton.setStyle(blackButtonStyle);
 
-
-
+        //add input listeners for each button. plays a sound when pressed
+        //the "tap" function is called to determine if the correct button in the sequence is pressed.
         buttons[0].addListener(new ClickListener() {
                                    @Override
                                    public void clicked(InputEvent event, float x, float y) {
-                                       for (Sound sound : sounds) {
-                                           sound.stop();
-                                       }
-                                       sounds[0].play();
-                                       tap(0);
-                                   }
-                               }
+               for (Sound sound : sounds) {
+                   sound.stop();
+               }
+               sounds[0].play();
+               tap(0);
+           }
+       }
         );
         buttons[1].addListener(new ClickListener() {
             @Override
@@ -322,14 +337,13 @@ public class SimonGame implements Screen {
             }
         });
 
+        //add a button to the current sequence, then play the sequence for the user.
         addSequence();
         playSequence();
     }
 
     @Override
     public void resize(int width, int height) {
-
-
     }
 
     @Override
@@ -353,14 +367,14 @@ public class SimonGame implements Screen {
         Random random = new Random();
         color = random.nextInt(7);
 
+        //return the random color
         return color;
     }
 
-
     @Override
     public void show() {
-        // music
 
+        //display all the buttons and labels.
         for (int i = 0; i < 7; i++) {
             game.getStage().addActor(buttons[i]);
         }
@@ -368,11 +382,9 @@ public class SimonGame implements Screen {
         for (int i = 0; i < 4; i++) {
             game.getStage().addActor(labels[i]);
         }
-
-
-
     }
 
+    //cleanup of all the buttons and labels
     @Override
     public void hide() {
         for (int i = 0; i < 7; i++) {
@@ -384,38 +396,33 @@ public class SimonGame implements Screen {
         }
     }
 
-
     @Override
     public void pause() {
-
-
     }
 
     @Override
     public void resume() {
-
     }
 
     @Override
     public void dispose() {
-
-
     }
 
+    //add a random color to the sequence. calls "RandomColor" to generate the color.
     public void addSequence()
     {
         seq.add( RandomColor());
         length++;
     }
 
-
+    //play all the buttons in the sequence so the user can press the buttons in the isplayed order
     public void playSequence() {
-
+        //disable touch on the buttons while the sequence is being played
         for (Button button : buttons) {
             button.setTouchable(Touchable.disabled);
         }
 
-
+        //flashes the button button sounnd on a timer. this is so all the buttons do not play at once.and plays the
         Timer.schedule(new Timer.Task(){
             int i = 0;
             @Override
@@ -426,84 +433,89 @@ public class SimonGame implements Screen {
                Button button = buttons[seq.get(i)];
                 flashButton(button, seq.get(i));
                 sounds[seq.get(i)].play();
-
                 i++;
-
-
             }
         }
                 , 1        //    (delay)
                 , 0.8f    //    (seconds)
-                , length
+                , length //repeat this task for the length of the sequence.
         );
 
+        //enble touch again after sequence is played.
         for (Button button : buttons) {
             button.setTouchable(Touchable.enabled);
         }
     }
 
+    //checks for correct input every time a button is pressed
     public void tap(int color){
+        //if the button pressed is the correct one in the sequence
         if (color == seq.get(currentStep)){
             currentStep++;
             right = true;
 
+            //if it is also the last color in the sequence,
             if (currentStep== length){
+                //update score
                 labels[1].setText(Integer.toString(currentStep));
+                //check for new high score
                 int highest = getHighScore();
                 if (highest <= currentStep) {
                     setHighScore(currentStep);
                     labels[3].setText(Integer.toString((getHighScore())));
                 }
-
+                //reset sequence, add a new color to the end this time.
                 currentStep = 0;
                 addSequence();
                 playSequence();
             }
         }
-        else{
+        else{ //not correct button
+            //play the error sound
             right = false;
             for (Sound sound : sounds) {
                 sound.stop();
             }
             wrong.play();
+            //update high score if necessary
             int highest = getHighScore();
             if (highest <= currentStep) {
                 setHighScore(currentStep);
             }
-
-
-
+            //go back to main menu, this is a loss
             game.setScreen(new com.echo.game.android.GameOverScreen(game));
-
         }
-
-
     }
 
+    //flashes the button color when it is displayed in the sequence
     public void flashButton(Actor actor, int i){
         actor.setOrigin(actor.getWidth() / 2, actor.getHeight() / 2);
         actor.addAction(sequence(color(shades[i + 7], 0.4f, Interpolation.exp10Out), (color(shades[i], 0.4f, Interpolation.exp10In)), run(new Runnable() {
             @Override
             public void run() {
-
             }
-
         })));
     }
 
+    //sets the highscore in the preferences file
     public static void setHighScore(int score) {
         prefs.putInteger("highscore", score);
         prefs.flush();
     }
+
+    //gets the highscore in the preferences file
     public static int getHighScore() {
         return prefs.getInteger("highscore");
     }
+
+    //sets the user's choice in using the alternate sounds
     public static void setAltSound(boolean bool) {
         prefs.putBoolean("UseAltSound", bool);
         prefs.flush();
     }
+
+    //gets the user's choice in using the alternate sounds
     public static boolean getAltSound() {
         return prefs.getBoolean("UseAltSound");
     }
-
 }

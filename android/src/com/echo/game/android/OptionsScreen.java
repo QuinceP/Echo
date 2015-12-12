@@ -3,8 +3,7 @@ package com.echo.game.android;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -12,24 +11,26 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 
 
-//This is the main menu, which will be displayed when the user starts the game
+//This is the options menu, which will be displayed when the user selects it from the main menu
 public class OptionsScreen implements Screen {
-    final Simon game;
+    final Echo game;
     final TextButton back;
     final CheckBox altSound;
     public static Preferences prefs;
 
+    //set and get alternate sound preference
     public static void setAltSound(boolean bool) {
         prefs.putBoolean("UseAltSound", bool);
         prefs.flush();
     }
+
     public static boolean getAltSound() {
         return prefs.getBoolean("UseAltSound");
     }
 
 
-    public OptionsScreen(final Simon simon) {
-        this.game = simon;
+    public OptionsScreen(final Echo echo) {
+        this.game = echo;
         prefs = Gdx.app.getPreferences("Echo");
         if (!prefs.contains("UseAltSound")) {
             prefs.putBoolean("UseAltSound", false);
@@ -62,11 +63,12 @@ public class OptionsScreen implements Screen {
     }
     @Override
     public void render(float delta) {
+        game.getStage().getCamera().update();
+        game.getStage().getBatch().setProjectionMatrix(game.getStage().getCamera().combined);
 
-
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
     }
 
-    //unused methods so far
     @Override
     public void resize(int width, int height) {
     }
